@@ -1,0 +1,7 @@
+com/quiz/repository/ParticipantRepository.class
+com/quiz/controller/QuizController.class
+com/quiz/QuizApplication.class
+com/quiz/model/Quiz.class
+com/quiz/model/Participant.class
+com/quiz/repository/QuizRepository.class
+com/quiz/model/Question.class
