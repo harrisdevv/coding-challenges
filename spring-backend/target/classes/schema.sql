@@ -5,23 +5,27 @@ DROP TABLE IF EXISTS quiz CASCADE;
 
 -- Create quiz table
 CREATE TABLE quiz (
-    id VARCHAR(255) PRIMARY KEY,
+    id VARCHAR(36) PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
-    description TEXT
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create question table
 CREATE TABLE question (
-    id SERIAL PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
+    quiz_id VARCHAR(36) REFERENCES quiz(id),
     question_text TEXT NOT NULL,
     correct_answer TEXT NOT NULL,
-    quiz_id VARCHAR(255) REFERENCES quiz(id)
+    options TEXT[] NOT NULL DEFAULT '{}',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create participant table
 CREATE TABLE participant (
-    id SERIAL PRIMARY KEY,
-    user_name VARCHAR(255) NOT NULL,
+    id BIGSERIAL PRIMARY KEY,
+    quiz_id VARCHAR(36) REFERENCES quiz(id),
+    name VARCHAR(255) NOT NULL,
     score INTEGER DEFAULT 0,
-    quiz_id VARCHAR(255) REFERENCES quiz(id)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

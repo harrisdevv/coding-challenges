@@ -1,6 +1,7 @@
 /home/hienphan/Desktop/code/coding-challenges/spring-backend/src/main/java/com/quiz/repository/QuizRepository.java
 /home/hienphan/Desktop/code/coding-challenges/spring-backend/src/main/java/com/quiz/repository/ParticipantRepository.java
 /home/hienphan/Desktop/code/coding-challenges/spring-backend/src/main/java/com/quiz/model/Quiz.java
+/home/hienphan/Desktop/code/coding-challenges/spring-backend/src/main/java/com/quiz/model/JoinQuizRequest.java
 /home/hienphan/Desktop/code/coding-challenges/spring-backend/src/main/java/com/quiz/QuizApplication.java
 /home/hienphan/Desktop/code/coding-challenges/spring-backend/src/main/java/com/quiz/controller/ParticipantController.java
 /home/hienphan/Desktop/code/coding-challenges/spring-backend/src/main/java/com/quiz/model/Question.java

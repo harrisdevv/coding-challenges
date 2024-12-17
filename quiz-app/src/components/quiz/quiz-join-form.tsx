@@ -4,9 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { getQuizByUuid } from '@/data/mock-quizzes'
 import { toast } from '@/hooks/use-toast'
-import { participantApi } from '@/services/api'
+import { participantApi, quizApi } from '@/services/api'
 
 export function QuizJoinForm() {
   const [quizId, setQuizId] = useState('')
@@ -19,18 +18,6 @@ export function QuizJoinForm() {
     setIsLoading(true)
 
     try {
-      // Check if quiz exists in mock data
-      const quiz = getQuizByUuid(quizId)
-      
-      if (!quiz) {
-        toast({
-          title: "Error",
-          description: "Quiz not found. Please check the ID and try again.",
-          variant: "destructive",
-        })
-        return
-      }
-
       if (!userName.trim()) {
         toast({
           title: "Error",
@@ -40,7 +27,10 @@ export function QuizJoinForm() {
         return
       }
 
-      // Call the backend API to join the quiz
+      // First check if quiz exists
+      await quizApi.getQuizById(quizId)
+
+      // Then join the quiz
       await participantApi.joinQuiz({
         quizId,
         userName: userName.trim(),
@@ -51,12 +41,12 @@ export function QuizJoinForm() {
         description: "Successfully joined the quiz.",
       })
 
-      // Redirect to quiz page
+      // Redirect to the quiz page
       router.push(`/quiz/${quizId}`)
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to join quiz. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to join quiz. Please try again.",
         variant: "destructive",
       })
     } finally {
@@ -66,23 +56,25 @@ export function QuizJoinForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-4">
+      <div>
         <Input
-          type="text"
           placeholder="Enter Quiz ID"
           value={quizId}
           onChange={(e) => setQuizId(e.target.value)}
+          required
         />
+      </div>
+      <div>
         <Input
-          type="text"
-          placeholder="Enter Your Name"
+          placeholder="Enter your name"
           value={userName}
           onChange={(e) => setUserName(e.target.value)}
+          required
         />
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? 'Joining...' : 'Join Quiz'}
-        </Button>
       </div>
+      <Button type="submit" className="w-full" disabled={isLoading}>
+        {isLoading ? "Joining..." : "Join Quiz"}
+      </Button>
     </form>
   )
 }

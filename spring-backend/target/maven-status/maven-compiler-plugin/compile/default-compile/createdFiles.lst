@@ -4,6 +4,6 @@ com/quiz/controller/ParticipantController.class
 com/quiz/model/Quiz.class
 com/quiz/repository/QuizRepository.class
 com/quiz/model/Question.class
+com/quiz/model/JoinQuizRequest.class
 com/quiz/QuizApplication.class
-com/quiz/controller/JoinQuizRequest.class
 com/quiz/model/Participant.class

@@ -1,95 +1,177 @@
 'use client'
 
-import { useParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { redirect, useParams } from 'next/navigation'
 import { Leaderboard } from '@/components/quiz/leaderboard'
-import { getParticipantsByQuizId } from '@/data/mock-participants'
-import { getQuestionsByQuizId } from '@/data/mock-questions'
-import { getQuizByUuid } from '@/data/mock-quizzes'
+import { ParticipantList } from '@/components/quiz/participant-list'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Quiz, Participant, quizApi, participantApi } from '@/services/api'
+import { getParticipantsByQuizId } from '@/data/mock-participants'
+import { toast } from '@/hooks/use-toast'
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button"
+
+const QUIZ_IDS = ['VOCAB-101', 'IDIOMS-202', 'GRAMMAR-303'] as const
+type ValidQuizId = typeof QUIZ_IDS[number]
+
+const isValidQuizId = (quizId: string): quizId is ValidQuizId => {
+  return QUIZ_IDS.includes(quizId as ValidQuizId)
+}
 
 export default function QuizPage() {
   const params = useParams()
-  const quizId = params.quizId as string
+  const quizId = params.quizId as ValidQuizId
   
-  const quiz = getQuizByUuid(quizId)
-  const questions = getQuestionsByQuizId(quizId)
-  const participants = getParticipantsByQuizId(quizId)
+  const [quiz, setQuiz] = useState<Quiz | null>(null)
+  const [participants, setParticipants] = useState<Participant[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string>>({})
 
-  if (!quiz) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-red-500">Quiz not found</h1>
-      </div>
-    )
+  const fetchParticipants = async () => {
+    try {
+      const participantsData = await participantApi.getParticipants(quizId)
+      
+      // Use mock data if no participants are found
+      if (participantsData.length === 0 && isValidQuizId(quizId)) {
+        const mockData = getParticipantsByQuizId(quizId)
+        setParticipants(mockData)
+      } else {
+        setParticipants(participantsData)
+      }
+    } catch (err) {
+      console.error('Error fetching participants:', err)
+    }
+  }
+
+  useEffect(() => {
+    const fetchQuizData = async () => {
+      try {
+        setIsLoading(true)
+        setError(null)
+
+        const quizData = await quizApi.getQuizById(quizId)
+        setQuiz(quizData)
+        await fetchParticipants()
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to fetch quiz data'
+        setError(message)
+        toast({
+          title: 'Error',
+          description: message,
+          variant: 'destructive',
+        })
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchQuizData()
+
+    // Poll for new participants every 5 seconds
+    const interval = setInterval(fetchParticipants, 5000)
+    return () => clearInterval(interval)
+  }, [quizId])
+
+  const handleAnswerSelect = (questionId: number, value: string) => {
+    setSelectedAnswers(prev => ({
+      ...prev,
+      [questionId]: value
+    }))
+  }
+
+  const handleSubmit = () => {
+    // TODO: Implement submit logic
+    console.log('Selected answers:', selectedAnswers)
+    toast({
+      title: 'Quiz Submitted',
+      description: 'Your answers have been recorded.',
+    })
+    redirect('/quiz/join')
+  }
+
+  if (isLoading) {
+    return <div>Loading quiz...</div>
+  }
+
+  if (error || !quiz) {
+    return <div>Error: {error || 'Quiz not found'}</div>
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="space-y-8">
-        {/* Quiz Header */}
-        <div>
-          <h1 className="text-3xl font-bold mb-2">{quiz.title}</h1>
+    <div className="container mx-auto py-6 space-y-6">
+      {/* Quiz Header */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>{quiz.title}</CardTitle>
+        </CardHeader>
+        <CardContent>
           <p className="text-muted-foreground">{quiz.description}</p>
-        </div>
+        </CardContent>
+      </Card>
 
-        {/* Leaderboard */}
-        <div className="mb-8">
-          <Leaderboard participants={participants} />
-        </div>
-
-        {/* Questions */}
+      <div className="grid gap-6 lg:grid-cols-[1fr,400px]">
+        {/* Questions Section */}
         <Card>
           <CardHeader>
-            <CardTitle>Quiz Questions</CardTitle>
+            <CardTitle>Questions</CardTitle>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="h-[400px] pr-4">
-              <div className="space-y-6">
-                {questions.map((question, index) => (
+            <ScrollArea className="h-[600px] pr-4">
+              <div className="space-y-8">
+                {quiz.questions?.map((question, index) => (
                   <div key={question.id} className="space-y-4">
-                    <h3 className="font-semibold">
-                      Question {index + 1}: {question.text}
-                    </h3>
-                    <div className="grid grid-cols-1 gap-2">
+                    <div className="flex items-start gap-4">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-sm font-medium">
+                        {index + 1}
+                      </div>
+                      <div className="space-y-1">
+                        <h3 className="font-medium leading-none">
+                          {question.questionText}
+                        </h3>
+                      </div>
+                    </div>
+                    <RadioGroup
+                      value={selectedAnswers[question.id]}
+                      onValueChange={(value) => handleAnswerSelect(question.id, value)}
+                      className="ml-12 space-y-3"
+                    >
                       {question.options.map((option, optionIndex) => (
-                        <div
-                          key={optionIndex}
-                          className="flex items-center p-3 border rounded-lg hover:bg-accent cursor-pointer"
-                        >
-                          <span className="mr-2">{String.fromCharCode(65 + optionIndex)}.</span>
-                          {option}
+                        <div key={optionIndex} className="flex items-center space-x-2">
+                          <RadioGroupItem
+                            value={option}
+                            id={`q${question.id}-option${optionIndex}`}
+                          />
+                          <Label
+                            htmlFor={`q${question.id}-option${optionIndex}`}
+                            className="text-sm"
+                          >
+                            {option}
+                          </Label>
                         </div>
                       ))}
-                    </div>
+                    </RadioGroup>
                   </div>
                 ))}
               </div>
             </ScrollArea>
-          </CardContent>
-        </Card>
-
-        {/* Participants List */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Current Participants</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {participants.map((participant) => (
-                <div
-                  key={participant.id}
-                  className="p-3 border rounded-lg bg-background flex items-center gap-2"
-                >
-                  <span className="font-medium">{participant.userName}</span>
-                  <span className="text-sm text-muted-foreground">
-                    Score: {participant.score}
-                  </span>
-                </div>
-              ))}
+            <div className="mt-6 flex justify-end">
+              <Button onClick={handleSubmit}>Submit Answers</Button>
             </div>
           </CardContent>
         </Card>
+
+        {/* Participants Section */}
+        <div className="space-y-6">
+          <ScrollArea className="h-[300px]">
+            <Leaderboard participants={participants} />
+          </ScrollArea>
+          <ScrollArea className="h-[300px]">
+            <ParticipantList participants={participants} />
+          </ScrollArea>
+        </div>
       </div>
     </div>
   )

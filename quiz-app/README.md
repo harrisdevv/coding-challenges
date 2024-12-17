@@ -1,36 +1,111 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Quiz Application
 
-## Getting Started
+A real-time English learning platform built with Next.js and Spring Boot. The application enables users to participate in interactive quizzes while tracking progress through a real-time leaderboard system.
 
-First, run the development server:
+## Overview
+
+The application consists of two main components:
+
+- **Frontend**: Next.js application with modern UI components and real-time updates
+- **Backend**: Spring Boot REST API handling quiz logic and participant management
+
+## Features
+
+- Interactive quiz participation with multiple-choice questions
+- Real-time participant tracking and leaderboard
+- Modern, responsive user interface using shadcn/ui components
+- Server-side rendering and optimized performance with Next.js
+- RESTful API integration with proper error handling
+- TypeScript support for enhanced type safety
+
+## Setup and Installation
+
+### Frontend
+
+Prerequisites:
+- Node.js 16.x or higher
+- npm or yarn package manager
 
 ```bash
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env.local
+
+# Start development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The frontend will be available at `http://localhost:3000`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Backend
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Prerequisites:
+- Java 17 or higher
+- Maven 3.x
 
-## Learn More
+```bash
+# Navigate to backend directory
+cd backend
 
-To learn more about Next.js, take a look at the following resources:
+# Build the project
+mvn clean install
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Run the application
+mvn spring-boot:run
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The backend API will be available at `http://localhost:8080`
 
-## Deploy on Vercel
+## Environment Variables
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```env
+# Frontend (.env.local)
+NEXT_PUBLIC_API_URL=http://localhost:8080/api
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Backend (application.properties)
+server.port=8080
+spring.datasource.url=jdbc:postgresql://localhost:5432/quiz_db
+```
+
+## Testing
+
+The project includes comprehensive unit tests for critical components. Run the tests using:
+
+```bash
+# Run all tests
+npm test
+
+# Run tests with coverage
+npm test -- --coverage
+
+# Run tests in watch mode
+npm test -- --watch
+```
+
+Key test suites:
+- `QuizPage`: Tests quiz functionality, answer selection, and submission
+- `Leaderboard`: Tests participant sorting and display
+- `ParticipantList`: Tests participant rendering and updates
+
+## Code Quality Guidelines
+
+### Performance Optimization
+- Implemented React.memo for components that receive stable props
+- Used proper React hooks dependencies to prevent unnecessary re-renders
+- Implemented polling with appropriate intervals for real-time updates
+- Utilized Next.js Image component for optimized image loading
+
+### Code Organization
+- Components follow single responsibility principle
+- Shared utilities and types are centralized
+- Consistent file and folder structure
+- Clear separation of concerns between components
+
+### Best Practices
+- TypeScript for type safety
+- ESLint and Prettier for code formatting
+- Proper error handling and loading states
+- Responsive design patterns
+- Accessibility considerations with ARIA labels

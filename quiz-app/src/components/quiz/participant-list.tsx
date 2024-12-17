@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import {
   Card,
   CardContent,
@@ -8,55 +7,62 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { participantApi, Participant } from '@/services/api'
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Participant } from '@/services/api'
 
 interface ParticipantListProps {
-  quizId: string
+  participants: Participant[]
 }
 
-export function ParticipantList({ quizId }: ParticipantListProps) {
-  const [participants, setParticipants] = useState<Participant[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+export function ParticipantList({ participants }: ParticipantListProps) {
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+  }
 
-  useEffect(() => {
-    const fetchParticipants = async () => {
-      try {
-        const data = await participantApi.getParticipants(quizId)
-        setParticipants(data)
-      } catch (error) {
-        console.error('Error fetching participants:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchParticipants()
-
-    // Poll for new participants every 5 seconds
-    const interval = setInterval(fetchParticipants, 5000)
-    return () => clearInterval(interval)
-  }, [quizId])
-
-  if (isLoading) {
-    return <div>Loading participants...</div>
+  const getAvatarUrl = (id: number) => {
+    return `https://api.dicebear.com/7.x/avataaars/svg?seed=${id}`
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Participants</CardTitle>
-        <CardDescription>Current quiz participants</CardDescription>
+        <CardTitle>Current Participants</CardTitle>
+        <CardDescription>
+          {participants.length} {participants.length === 1 ? "person" : "people"} in this quiz
+        </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="space-y-4">
           {participants.map((participant) => (
-            <Card key={participant.id}>
-              <CardHeader>
-                <CardTitle>{participant.userName}</CardTitle>
-                <CardDescription>Score: {participant.score || 0}</CardDescription>
-              </CardHeader>
-            </Card>
+            <div
+              key={participant.id}
+              className="flex items-center justify-between space-x-4"
+            >
+              <div className="flex items-center space-x-4">
+                <Avatar>
+                  <AvatarImage src={getAvatarUrl(participant.id)} />
+                  <AvatarFallback>{getInitials(participant.name)}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-sm font-medium leading-none">
+                    {participant.name}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Score: {participant.score ?? 0}%
+                  </p>
+                </div>
+              </div>
+            </div>
           ))}
+          {participants.length === 0 && (
+            <p className="text-center text-sm text-muted-foreground">
+              No participants yet
+            </p>
+          )}
         </div>
       </CardContent>
     </Card>
