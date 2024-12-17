@@ -30,22 +30,6 @@ export default function QuizPage() {
   const [error, setError] = useState<string | null>(null)
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string>>({})
 
-  const fetchParticipants = async () => {
-    try {
-      const participantsData = await participantApi.getParticipants(quizId)
-      
-      // Use mock data if no participants are found
-      if (participantsData.length === 0 && isValidQuizId(quizId)) {
-        const mockData = getParticipantsByQuizId(quizId)
-        setParticipants(mockData)
-      } else {
-        setParticipants(participantsData)
-      }
-    } catch (err) {
-      console.error('Error fetching participants:', err)
-    }
-  }
-
   useEffect(() => {
     const fetchQuizData = async () => {
       try {
@@ -54,7 +38,6 @@ export default function QuizPage() {
 
         const quizData = await quizApi.getQuizById(quizId)
         setQuiz(quizData)
-        await fetchParticipants()
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to fetch quiz data'
         setError(message)
@@ -68,7 +51,24 @@ export default function QuizPage() {
       }
     }
 
+    const fetchParticipants = async () => {
+      try {
+        const participantsData = await participantApi.getParticipants(quizId)
+        
+        // Use mock data if no participants are found
+        if (participantsData.length === 0 && isValidQuizId(quizId)) {
+          const mockData = getParticipantsByQuizId(quizId)
+          setParticipants(mockData)
+        } else {
+          setParticipants(participantsData)
+        }
+      } catch (err) {
+        console.error('Error fetching participants:', err)
+      }
+    }
+
     fetchQuizData()
+    fetchParticipants()
 
     // Poll for new participants every 5 seconds
     const interval = setInterval(fetchParticipants, 5000)
@@ -83,7 +83,6 @@ export default function QuizPage() {
   }
 
   const handleSubmit = () => {
-    // TODO: Implement submit logic
     console.log('Selected answers:', selectedAnswers)
     toast({
       title: 'Quiz Submitted',

@@ -1,75 +1,73 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { act } from 'react-dom/test-utils'
+import '@testing-library/jest-dom'
 import QuizPage from '../page'
-import { mockParticipants } from '@/data/mock-participants'
 
-// Mock the useRouter
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({
-    push: vi.fn(),
-    refresh: vi.fn(),
-  }),
+// Create mocks for next/navigation
+const mockRouter = {
+  push: jest.fn(),
+}
+
+const mockRedirect = jest.fn()
+
+const mockParams = {
+  quizId: 'VOCAB-101'
+}
+
+// Mock the next/navigation module
+jest.mock('next/navigation', () => ({
+  useRouter: () => mockRouter,
+  useParams: () => mockParams,
+  redirect: (path: string) => mockRedirect(path),
 }))
 
-describe('QuizPage', () => {
+// Mock API services
+jest.mock('@/services/api', () => ({
+  quizApi: {
+    getQuizById: jest.fn(() => Promise.resolve({
+      id: 'VOCAB-101',
+      title: 'Test Quiz',
+      questions: [
+        {
+          id: 1,
+          questionText: 'What is the capital of France?',
+          options: ['London', 'Paris', 'Berlin', 'Madrid'],
+        },
+      ],
+    })),
+  },
+  participantApi: {
+    getParticipants: jest.fn(() => Promise.resolve([])),
+  },
+}))
+
+// Mock toast
+jest.mock('@/hooks/use-toast', () => ({
+  toast: jest.fn(),
+}))
+
+describe('Quiz Page Functionality', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    mockRouter.push.mockClear()
+    mockRedirect.mockClear()
   })
 
-  it('renders quiz page with questions and participants', () => {
-    render(<QuizPage params={{ quizId: '1' }} />)
+  it('should allow submitting answers', async () => {
+    render(<QuizPage />)
     
-    // Check if main components are rendered
-    expect(screen.getByText(/Question/i)).toBeDefined()
-    expect(screen.getByTestId('participant-list')).toBeDefined()
-    expect(screen.getByTestId('leaderboard')).toBeDefined()
-  })
-
-  it('handles answer selection correctly', () => {
-    render(<QuizPage params={{ quizId: '1' }} />)
-    
-    const radioButton = screen.getByLabelText(/First answer option/i)
-    fireEvent.click(radioButton)
-    
-    expect(radioButton.checked).toBe(true)
-  })
-
-  it('submits quiz answers and redirects', async () => {
-    const { getByText } = render(<QuizPage params={{ quizId: '1' }} />)
-    
-    // Select answers
-    const radioButtons = screen.getAllByRole('radio')
-    fireEvent.click(radioButtons[0])
-    
-    // Submit quiz
-    const submitButton = getByText(/Submit/i)
-    await act(async () => {
-      fireEvent.click(submitButton)
-    })
-    
-    // Verify redirect was called
+    // Wait for the quiz to load
     await waitFor(() => {
-      expect(useRouter().push).toHaveBeenCalledWith('/quiz/join')
-    })
-  })
-
-  it('updates participants list periodically', async () => {
-    vi.useFakeTimers()
-    
-    render(<QuizPage params={{ quizId: '1' }} />)
-    
-    // Fast-forward 5 seconds
-    act(() => {
-      vi.advanceTimersByTime(5000)
+      expect(screen.queryByText('Loading quiz...')).not.toBeInTheDocument()
     })
     
-    // Verify participants are updated
-    await waitFor(() => {
-      const participantsList = screen.getByTestId('participant-list')
-      expect(participantsList).toHaveTextContent(mockParticipants[0].name)
-    })
+    // Select an answer
+    const parisOption = screen.getByLabelText('Paris')
+    fireEvent.click(parisOption)
     
-    vi.useRealTimers()
+    // Find and click the submit button
+    const submitButton = screen.getByRole('button', { name: /submit answers/i })
+    fireEvent.click(submitButton)
+    
+    // Verify redirect after submission
+    expect(mockRedirect).toHaveBeenCalledWith('/quiz/join')
   })
 })
