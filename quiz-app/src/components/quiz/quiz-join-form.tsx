@@ -4,40 +4,61 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { toast } from 'sonner'
+import { getQuizByUuid } from '@/data/mock-quizzes'
+import { toast } from '@/hooks/use-toast'
+import { participantApi } from '@/services/api'
 
 export function QuizJoinForm() {
   const [quizId, setQuizId] = useState('')
+  const [userName, setUserName] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!quizId.trim()) {
-      toast.error('Please enter a quiz ID')
-      return
-    }
-
     setIsLoading(true)
-    try {
-      const response = await fetch('http://localhost:8080/api/quiz/join', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ quizId }),
-      })
 
-      if (!response.ok) {
-        throw new Error('Failed to join quiz')
+    try {
+      // Check if quiz exists in mock data
+      const quiz = getQuizByUuid(quizId)
+      
+      if (!quiz) {
+        toast({
+          title: "Error",
+          description: "Quiz not found. Please check the ID and try again.",
+          variant: "destructive",
+        })
+        return
       }
 
-      const data = await response.json()
-      toast.success('Successfully joined quiz!')
+      if (!userName.trim()) {
+        toast({
+          title: "Error",
+          description: "Please enter your name.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      // Call the backend API to join the quiz
+      await participantApi.joinQuiz({
+        quizId,
+        userName: userName.trim(),
+      })
+
+      toast({
+        title: "Success!",
+        description: "Successfully joined the quiz.",
+      })
+
+      // Redirect to quiz page
       router.push(`/quiz/${quizId}`)
     } catch (error) {
-      toast.error('Failed to join quiz. Please try again.')
-      console.error('Error joining quiz:', error)
+      toast({
+        title: "Error",
+        description: "Failed to join quiz. Please try again.",
+        variant: "destructive",
+      })
     } finally {
       setIsLoading(false)
     }
@@ -45,23 +66,23 @@ export function QuizJoinForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
+      <div className="space-y-4">
         <Input
           type="text"
           placeholder="Enter Quiz ID"
           value={quizId}
           onChange={(e) => setQuizId(e.target.value)}
-          disabled={isLoading}
-          className="w-full"
         />
+        <Input
+          type="text"
+          placeholder="Enter Your Name"
+          value={userName}
+          onChange={(e) => setUserName(e.target.value)}
+        />
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? 'Joining...' : 'Join Quiz'}
+        </Button>
       </div>
-      <Button
-        type="submit"
-        disabled={isLoading}
-        className="w-full"
-      >
-        {isLoading ? 'Joining...' : 'Join Quiz'}
-      </Button>
     </form>
   )
 }

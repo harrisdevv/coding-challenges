@@ -1,0 +1,1 @@
+ALTER TABLE participant ALTER COLUMN quiz_id TYPE VARCHAR(255);

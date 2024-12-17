@@ -3,28 +3,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-
-// Mock quiz data
-const mockQuizzes = [
-  {
-    id: "QUIZ001",
-    title: "English Grammar Basics",
-    description: "Test your knowledge of basic English grammar rules",
-    participants: 45,
-  },
-  {
-    id: "QUIZ002",
-    title: "Vocabulary Challenge",
-    description: "Expand your English vocabulary with this challenging quiz",
-    participants: 32,
-  },
-  {
-    id: "QUIZ003",
-    title: "Business English",
-    description: "Learn essential business English terms and phrases",
-    participants: 28,
-  },
-];
+import { mockQuizzes } from "@/data/mock-quizzes";
+import { Badge } from "@/components/ui/badge";
 
 export function QuizList() {
   return (
@@ -32,14 +12,19 @@ export function QuizList() {
       {mockQuizzes.map((quiz) => (
         <Card key={quiz.id}>
           <CardHeader>
-            <CardTitle>{quiz.title}</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>{quiz.title}</CardTitle>
+              <Badge variant="outline" className="font-mono text-xs">
+                {quiz.uuid}
+              </Badge>
+            </div>
             <CardDescription>{quiz.description}</CardDescription>
           </CardHeader>
           <CardContent className="flex justify-between items-center">
             <p className="text-sm text-muted-foreground">
               {quiz.participants} participants
             </p>
-            <Link href={`/quiz/${quiz.id}`}>
+            <Link href={`/quiz/${quiz.uuid}`}>
               <Button>Join Quiz</Button>
             </Link>
           </CardContent>

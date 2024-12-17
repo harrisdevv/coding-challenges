@@ -23,7 +23,7 @@ public class QuizController {
 
     @GetMapping("/{quizId}")
     public ResponseEntity<Quiz> getQuizById(@PathVariable String quizId) {
-        return quizRepository.findByQuizId(quizId)
+        return quizRepository.findById(quizId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }

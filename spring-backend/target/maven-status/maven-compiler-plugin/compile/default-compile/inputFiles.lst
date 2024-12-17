@@ -2,6 +2,7 @@
 /home/hienphan/Desktop/code/coding-challenges/spring-backend/src/main/java/com/quiz/repository/ParticipantRepository.java
 /home/hienphan/Desktop/code/coding-challenges/spring-backend/src/main/java/com/quiz/model/Quiz.java
 /home/hienphan/Desktop/code/coding-challenges/spring-backend/src/main/java/com/quiz/QuizApplication.java
+/home/hienphan/Desktop/code/coding-challenges/spring-backend/src/main/java/com/quiz/controller/ParticipantController.java
 /home/hienphan/Desktop/code/coding-challenges/spring-backend/src/main/java/com/quiz/model/Question.java
 /home/hienphan/Desktop/code/coding-challenges/spring-backend/src/main/java/com/quiz/controller/QuizController.java
 /home/hienphan/Desktop/code/coding-challenges/spring-backend/src/main/java/com/quiz/model/Participant.java
